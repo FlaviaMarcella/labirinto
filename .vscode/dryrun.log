@@ -1,0 +1,10 @@
+make.exe -f c:\Users\flavi\Documents\Aeds - Prática\labirinto\${workspace} --dry-run --keep-going --print-directory
+make: c:\Users\flavi\Documents\Aeds - Prática\labirinto\${workspace}: No such file or directory
+
+make: Entering directory '/cygdrive/c/Users/flavi/Documents/Aeds - Prática/labirinto'
+ 
+make: *** No rule to make target 'c:\Users\flavi\Documents\Aeds - Prática\labirinto\${workspace}'.
+make: Failed to remake makefile 'c:\Users\flavi\Documents\Aeds - Prática\labirinto\${workspace}'.
+
+make: Leaving directory '/cygdrive/c/Users/flavi/Documents/Aeds - Prática/labirinto'
+ 
