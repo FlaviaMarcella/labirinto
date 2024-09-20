@@ -7,11 +7,10 @@
 using namespace std;
 namespace fs = std::filesystem;
 
-typedef struct {
-    int x;
-    int y;
-    bool visitado;
-} Posicao;
+typedef struct pilha_{
+    int chave;
+    struct pilha_ * prox;
+}pilha;
 
 //Os movimentos possíveis são: baixo, esquerda e direita; Deve-se seguir uma ordem de checagem dos movimentos: baixo, direita e esquerda.
 //A função labirinto deve ser implementada de forma recursiva, e deve receber como parâmetro a posição atual do robô, a matriz que representa o labirinto, e o tamanho do labirinto.
@@ -110,5 +109,9 @@ void labirinto(void){
         return;
 
     print_labirinto(labirinto, n);
+
+
+
+
 }
 
