@@ -1,114 +1,176 @@
-#include "labirinto.h"
 #include <iostream>
 #include <fstream>
-#include <string.h>
-#include <filesystem>
+#include <string>
+
+#include "labirinto.h"
 
 using namespace std;
-namespace fs = std::filesystem;
 
-typedef struct {
-    int x;
-    int y;
-    bool visitado;
-} Posicao;
+struct Posicao {
+    int x, y;
+};
 
-//Os movimentos possíveis são: baixo, esquerda e direita; Deve-se seguir uma ordem de checagem dos movimentos: baixo, direita e esquerda.
-//A função labirinto deve ser implementada de forma recursiva, e deve receber como parâmetro a posição atual do robô, a matriz que representa o labirinto, e o tamanho do labirinto.
+struct Pilha {
+    Posicao elementos[100]; // Tamanho máximo da pilha
+    int topo;
 
+    Pilha() : topo(-1) {}
 
-//devemos ler o arquivo de entrada e armazenar o labirinto em uma matriz de inteiros.
-//cada linha do arquivo de entrada representa uma linha da matriz, e os valores de cada linha são separados por caracteres unicos, ou seja lê-se um, lê-se outro,
-//lê-se outro, e assim por diante. O arquivo de entrada é composto por um inteiro n, que representa o tamanho do labirinto, seguido de n linhas, cada uma com n inteiros.
-int ler_labirinto(ifstream &arquivo, char **labirinto, int n){
-
-        if (!arquivo.is_open()) {
-        printf("Erro ao abrir o arquivo!\n");
-        return 1;
-    }
-    
-    for(int i = 0; i < n; i++){
-        for(int j = 0; j < n; j++){
-            arquivo >> labirinto[i][j];
+    void push(Posicao p) {
+        if (topo < 99) {
+            elementos[++topo] = p;
+        } else {
+            cerr << "Pilha cheia!" << endl;
         }
     }
 
-    return 0;
+    void pop() {
+        if (topo >= 0) {
+            --topo;
+        } else {
+            cerr << "Pilha vazia!" << endl;
+        }
+    }
 
+    Posicao top() {
+        if (topo >= 0) {
+            return elementos[topo];
+        } else {
+            cerr << "Pilha vazia!" << endl;
+            return {-1, -1}; // Retorna uma posição inválida
+        }
+    }
+
+    bool isEmpty() {
+        return topo == -1;
+    }
+
+    void getElements(Posicao* elementosPilha, int &tamanho) {
+        tamanho = topo + 1;
+        for (int i = 0; i <= topo; ++i) {
+            elementosPilha[i] = elementos[i];
+        }
+    }
+};
+
+bool movimento_valido(int x, int y, char **labirinto, bool **visitado, int n) {
+    return (x >= 0 && x < n && y >= 0 && y < n && labirinto[x][y] != 'X' && !visitado[x][y]);
 }
 
-void print_labirinto(char **labirinto, int n){
-
-    for(int i = 0; i < n; i++){
-        for(int j = 0; j < n; j++){
-            cout << labirinto[i][j] << " ";
+void print_labirinto(char **labirinto, int n) {
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            cout << labirinto[i][j] << ' ';
         }
         cout << endl;
     }
 }
 
-int listar_arquivos(string folder[], int max_files) {
-    int count = 0;
-    for (const auto& entry : fs::directory_iterator("labirintos/")) {
-        if (entry.is_regular_file() && entry.path().extension() == ".txt") {
-            if (count < max_files) {
-                folder[count++] = entry.path().filename().string();
-            } else {
-                break;
+int ler_labirinto(ifstream &arquivo, char **labirinto, int n) {
+    if (!arquivo.is_open()) {
+        cerr << "Erro ao abrir o arquivo!" << endl;
+        return 1;
+    }
+
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            arquivo >> labirinto[i][j];
+        }
+    }
+
+    return 0;
+}
+
+void print_caminho(Pilha &pilha) {
+    Posicao caminho[100];
+    int tamanho;
+    pilha.getElements(caminho, tamanho);
+    cout << "Caminho completo:" << endl;
+    for (int i = 0; i < tamanho; ++i) {
+        cout << "(" << caminho[i].x << ", " << caminho[i].y << ")" << endl;
+    }
+}
+
+bool resolver_labirinto(char **labirinto, int n) {
+    Pilha pilha;
+    bool **visitado = new bool*[n];
+    for (int i = 0; i < n; ++i) {
+        visitado[i] = new bool[n]();
+    }
+    Posicao inicio, fim;
+
+    // Encontrar a posição inicial (S) e final (E)
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            if (labirinto[i][j] == 'S') {
+                inicio = {i, j};
+            } else if (labirinto[i][j] == 'E') {
+                fim = {i, j};
             }
         }
     }
-    return count;
-}
 
-void escolhe_arquivo(int num_files, string folder[], char **labirinto, int n, bool &retFlag)
-{
-    retFlag = true;
-    if (num_files == 0)
-    {
-        cout << "Nenhum arquivo encontrado!" << endl;
-        return;
+    pilha.push(inicio);
+    visitado[inicio.x][inicio.y] = true;
+
+    while (!pilha.isEmpty()) {
+        Posicao atual = pilha.top();
+        pilha.pop();
+
+        if (atual.x == fim.x && atual.y == fim.y) {
+            // Adicionar a posição final à pilha
+            pilha.push(fim);
+
+            // Marcar o caminho encontrado
+            Posicao caminho[100];
+            int tamanho;
+            pilha.getElements(caminho, tamanho);
+            for (int i = 0; i < tamanho; ++i) {
+                labirinto[caminho[i].x][caminho[i].y] = '0'; // Marcar o caminho
+            }
+            print_caminho(pilha); // Imprimir o caminho completo
+            return true; // Encontrou a saída
+        }
+
+        // Movimentos possíveis: baixo, direita, esquerda, cima
+        Posicao movimentos[] = {{atual.x + 1, atual.y}, {atual.x, atual.y + 1}, {atual.x, atual.y - 1}, {atual.x - 1, atual.y}};
+
+        for (const auto& mov : movimentos) {
+            if (movimento_valido(mov.x, mov.y, labirinto, visitado, n)) {
+                pilha.push(mov);
+                visitado[mov.x][mov.y] = true;
+                labirinto[mov.x][mov.y] = '.'; // Marcar o lugar visitado
+            }
+        }
     }
 
-    cout << "Arquivos disponiveis:" << endl;
-    for (int i = 0; i < num_files; ++i)
-    {
-        cout << i + 1 << ": " << folder[i] << endl;
-    }
-    // menu para escolher o arquivo de entrada
-
-    string opcao;
-    cout << "Escolha o arquivo de entrada: ";
-    cin >> opcao;
-
-    opcao = "labirintos/" + folder[opcao[0] - '1'];
-
-    cout << opcao << endl;
-
-    ifstream arquivo(opcao);
-    ler_labirinto(arquivo, labirinto, n);
-    arquivo.close();
-    retFlag = false;
+    return false; // Não encontrou a saída
 }
 
-
-void labirinto(void){
-
+void labirinto(void) {
     int n = 10;
     char **labirinto = new char*[n];
-    string folder[5];
     
     for (int i = 0; i < n; ++i) {
         labirinto[i] = new char[n];
     }
 
-    int num_files = listar_arquivos(folder, 5);
+    ifstream arquivo("labirintos/labirinto4.txt");
 
-    bool retFlag;
-    escolhe_arquivo(num_files, folder, labirinto, n, retFlag);
-    if (retFlag)
+    if (ler_labirinto(arquivo, labirinto, n) != 0) {
         return;
+    }
 
-    print_labirinto(labirinto, n);
+    if (resolver_labirinto(labirinto, n)) {
+        cout << "Caminho encontrado:" << endl;
+        print_labirinto(labirinto, n);
+    } else {
+        cout << "Não há caminho para a saída." << endl;
+    }
+
+    // Liberação da memória alocada
+    for (int i = 0; i < n; ++i) {
+        delete[] labirinto[i];
+    }
+    delete[] labirinto;
 }
-
