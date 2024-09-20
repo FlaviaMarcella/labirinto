@@ -1,7 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-
+#include <stdio.h>
+#include <stdlib.h>
 #include "labirinto.h"
 
 using namespace std;
@@ -65,6 +66,7 @@ void print_labirinto(char **labirinto, int n) {
         cout << endl;
     }
 }
+
 
 int ler_labirinto(ifstream &arquivo, char **labirinto, int n) {
     if (!arquivo.is_open()) {
