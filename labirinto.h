@@ -1,6 +1,6 @@
-#ifndef _H_TESTE
-#define _H_TESTE
+#ifndef LABIRINTO_H
+#define LABIRINTO_H
 
 void labirinto(void);
 
-#endif
+#endif // LABIRINTO_H
