@@ -1,39 +1,37 @@
-# Automatizando o makefile
+# Compilador e flags
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -Iinclude
 
-# Nome do projeto
-PROJ_NAME=labirinto
+# Diretórios
+SRCDIR = src
+INCDIR = include
+BINDIR = bin
 
-# Arquivos .cpp
-C_SOURCE=$(wildcard *.cpp)
+# Arquivos fonte e objeto
+SOURCES = $(wildcard $(SRCDIR)/*.cpp)
+OBJECTS = $(SOURCES:$(SRCDIR)/%.cpp=$(BINDIR)/%.o)
+TARGET = $(BINDIR)/projeto
 
-# Arquivos .h
-H_SOURCE=$(wildcard *.h)
+# Regra padrão
+all: $(TARGET)
 
-# Arquivos objeto
-OBJ=$(C_SOURCE:.cpp=.o)
+# Regra para criar o diretório bin
 
-# Compilador
-CC=gcc
+$(BINDIR):
+	@mkdir -p $(BINDIR)
 
-# Flags (opções) para o compilador
-CC_FLAGS=-c         \
-         -Wall      \
-		 -g         \
-         -pedantic
+# Regra para compilar o projeto
+$(TARGET): $(BINDIR) $(OBJECTS)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJECTS)
 
-#########################
-# Compilação e linkagem #
-#########################
-all: $(PROJ_NAME)
+# Regra para compilar arquivos objeto
+$(BINDIR)/%.o: $(SRCDIR)/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(PROJ_NAME): $(OBJ)
-	$(CC) -o $@ $^
-
-%.o: %.cpp %.h
-	$(CC) -o $@ $< $(CC_FLAGS)
-
-main.o: main.cpp $(H_SOURCE)
-	$(CC) -o $@ $< $(CC_FLAGS)
-
+# Regra para limpar arquivos compilados
 clean:
-	rm -rf *.o $(PROJ_NAME) *~
+	rm -rf $(BINDIR)
+
+# Regra para executar o projeto
+run: $(TARGET)
+	./$(TARGET)
